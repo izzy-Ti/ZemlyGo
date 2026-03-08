@@ -2,7 +2,7 @@ package domain
 
 import "time"
 
-type Driver struct {
+type Drivers struct {
 	ID         uint   `gorm:"primaryKey"`
 	UserId     uint   `gorm:"not null"`
 	LicenseNo  string `gorm:"not null"`

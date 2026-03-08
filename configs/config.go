@@ -23,7 +23,7 @@ func Load() *Config {
 
 	cfg := &Config{
 		Port:              os.Getenv("PORT"),
-		DataBaseURL:       os.Getenv(""),
+		DataBaseURL:       os.Getenv("DATABASE_URL"),
 		SupabaseURL:       os.Getenv(""),
 		SupabaseAnonKey:   os.Getenv(""),
 		SupabaseSericeKey: os.Getenv(""),

@@ -1,22 +1,21 @@
 package main
 
 import (
-	"github.com/gin-gonic/gin"
 	"github.com/izzy-Ti/ZemlyGo/configs"
 	"github.com/izzy-Ti/ZemlyGo/internals/bootstrap"
 	"github.com/izzy-Ti/ZemlyGo/internals/infrastructure/database"
 )
 
 func main() {
-	r := gin.Default()
+	// r := gin.Default()
 
-	r.GET("/ping", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "PONG",
-		})
-	})
+	// r.GET("/ping", func(c *gin.Context) {
+	// 	c.JSON(200, gin.H{
+	// 		"message": "PONG",
+	// 	})
+	// })
 
-	r.Run()
+	// r.Run()
 
 	cfg := configs.Load()
 

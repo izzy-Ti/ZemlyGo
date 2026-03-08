@@ -2,7 +2,7 @@ package domain
 
 import "time"
 
-type User struct {
+type Users struct {
 	ID             uint   `gorm:"primaryKey"`
 	SupabaseUserID string `gorm:"uniqueIndex;not null"`
 	Name           string `gorm:"not null"`
