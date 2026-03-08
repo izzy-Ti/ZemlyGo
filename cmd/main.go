@@ -23,7 +23,8 @@ func main() {
 	database.RunMigration(db)
 
 	app := bootstrap.NewApp(cfg, db)
-	router := bootstrap.NewRoute(app)
+	providers := bootstrap.NewProvider(app)
+	router := bootstrap.NewRoute(app, providers)
 
 	router.Run(":" + cfg.Port)
 }

@@ -1,9 +1,9 @@
 package realtime
 
-import "golang.org/x/net/websocket"
+import "github.com/gorilla/websocket"
 
-type client struct {
-	userID string
+type Client struct {
+	UserID string
 	Role   string
 	Conn   *websocket.Conn
 	Send   chan Event

@@ -7,39 +7,39 @@ import (
 
 type Hub struct {
 	mu     sync.RWMutex
-	client map[string]*client
+	Client map[string]*Client
 }
 
 func NewHub() *Hub {
 	return &Hub{
-		client: make(map[string]*client),
+		Client: make(map[string]*Client),
 	}
 }
 
-func (h *Hub) Register(client *client) {
+func (h *Hub) Register(Client *Client) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
-	h.client[client.userID] = client
-	log.Println("client connected: ", client.userID)
+	h.Client[Client.UserID] = Client
+	log.Println("Client connected: ", Client.UserID)
 }
 
-func (h *Hub) Unregister(userId string) {
+func (h *Hub) Unregister(UserId string) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
-	delete(h.client, userId)
-	log.Println("client disconnected: ", userId)
+	delete(h.Client, UserId)
+	log.Println("Client disconnected: ", UserId)
 }
-func (h *Hub) SendToUser(userId string, event Event) {
+func (h *Hub) SendToUser(UserId string, event Event) {
 	h.mu.RLock()
-	client, ok := h.client[userId]
+	Client, ok := h.Client[UserId]
 	h.mu.RUnlock()
 
 	if !ok {
 		return
 	}
 	select {
-	case client.Send <- event:
+	case Client.Send <- event:
 	default:
-		log.Println("send channel full for user: ", userId)
+		log.Println("send channel full for user: ", UserId)
 	}
 }
