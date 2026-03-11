@@ -8,6 +8,7 @@ type Vehicle struct {
 	PlateNumber string `gorm:"uniqueIndex;not null"`
 	Model       string `gorm:"not null"`
 	Color       string `gorm:"not null"`
+	Status      bool   `gorm:"not null;default:true"`
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 }
