@@ -12,5 +12,4 @@ type DriverRepository interface {
 	UpdateLocation(driverID uint, lat, lng float64) error
 	GetNearbyDrivers(lat, lng float64, radiusKm float64) ([]domain.Drivers, error)
 	GetAvailableDrivers() ([]domain.Drivers, error)
-	ApproveDriver(driverID uint) error
 }
