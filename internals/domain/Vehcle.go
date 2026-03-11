@@ -2,7 +2,7 @@ package domain
 
 import "time"
 
-type Vehcile struct {
+type Vehicle struct {
 	ID          uint   `gorm:"primaryKey"`
 	DriverID    uint   `gorm:"not null"`
 	PlateNumber string `gorm:"uniqueIndex;not null"`

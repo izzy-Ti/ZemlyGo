@@ -12,7 +12,7 @@ func RunMigration(db *gorm.DB) {
 		&domain.Payment{},
 		&domain.Rating{},
 		&domain.Ride{},
-		&domain.Vehcile{},
+		&domain.Vehicle{},
 	)
 	if err != nil {
 		log.Fatal("migration failed: ", err)
