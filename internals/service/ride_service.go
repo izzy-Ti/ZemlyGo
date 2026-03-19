@@ -17,8 +17,8 @@ func NewRideSerive(hub *realtime.Hub) *RideService {
 func (s *RideService) NotifyDriverNewRide(driverID, padd, dadd, rideType string, rideID uint, Plng, plat, dlng, dlat float64) {
 	const R = 6371
 
-	dLat := (dlat - plat) * (math.Pi / 18)
-	dLon := (dlng - Plng) * (math.Pi / 18)
+	dLat := (dlat - plat) * (math.Pi / 180)
+	dLon := (dlng - Plng) * (math.Pi / 180)
 
 	a := math.Sin(dLat/2)*math.Sin(dLat/2) +
 		math.Cos(dlat*(math.Pi/180))*math.Cos(dlat*(math.Pi/180))*
