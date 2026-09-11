@@ -1,17 +1,19 @@
 package bootstrap
 
-import "github.com/gin-gonic/gin"
+import (
+	"github.com/gin-gonic/gin"
+	"github.com/izzy-Ti/ZemlyGo/internals/routes"
+)
 
 func NewRoute(app *App, providers *Providers) *gin.Engine {
-	r := gin.Default()
+	if !app.Config.IsDevelopment() {
+		gin.SetMode(gin.ReleaseMode)
+	}
 
-	r.GET("/ping", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "PONG",
-		})
-	})
+	r := gin.New()
 
-	r.GET("/ws", providers.WebsocketHandler.Handle)
+	// Register all routes and middlewares
+	routes.SetupRoutes(r, providers.ToRouteProviders(), app.Config)
 
 	return r
 }

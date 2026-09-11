@@ -1,0 +1,9 @@
+CREATE TABLE IF NOT EXISTS driver_locations (
+    id SERIAL PRIMARY KEY,
+    driver_id INTEGER NOT NULL UNIQUE REFERENCES drivers(id) ON DELETE CASCADE,
+    lat DOUBLE PRECISION NOT NULL,
+    lng DOUBLE PRECISION NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_driver_locations_driver ON driver_locations(driver_id);

@@ -7,6 +7,7 @@ type RatingRepository interface {
 	GetByID(id uint) (*domain.Rating, error)
 	GetByRideID(rideID uint) ([]domain.Rating, error)
 	GetByToUserID(toUserID uint) ([]domain.Rating, error)
+	GetAverageRating(toUserID uint) (float64, int, error)
 	Update(rating *domain.Rating) error
 	Delete(id uint) error
 }

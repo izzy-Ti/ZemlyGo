@@ -7,16 +7,23 @@ import (
 	"gorm.io/gorm"
 )
 
-func RunMigration(db *gorm.DB) {
+func RunMigration(db *gorm.DB) error {
 	err := db.AutoMigrate(
+		&domain.Users{},
+		&domain.Drivers{},
+		&domain.Vehicle{},
+		&domain.DriverLocation{},
+		&domain.Ride{},
 		&domain.Payment{},
 		&domain.Rating{},
-		&domain.Ride{},
-		&domain.Vehicle{},
+		&domain.ChatMessage{},
+		&domain.EmergencyAlert{},
 	)
 	if err != nil {
-		log.Fatal("migration failed: ", err)
+		log.Printf("migration warning/failed: %v\n", err)
+		return err
 	}
 
-	log.Println("database migrated")
+	log.Println("Database schema auto-migrated successfully (including chat, emergency alerts, and extensions)")
+	return nil
 }

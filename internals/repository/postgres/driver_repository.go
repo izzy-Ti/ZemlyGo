@@ -1,12 +1,14 @@
 package postgres
 
 import (
+	"sort"
 	"time"
 
 	"github.com/izzy-Ti/ZemlyGo/internals/domain"
 	"github.com/izzy-Ti/ZemlyGo/internals/repository/interfaces"
 	"github.com/izzy-Ti/ZemlyGo/internals/utils"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type DriverRepo struct {
@@ -18,103 +20,111 @@ func NewDriverRepository(db *gorm.DB) interfaces.DriverRepository {
 }
 
 func (d *DriverRepo) Create(driver *domain.Drivers) error {
-	if err := d.db.Create(driver).Error; err != nil {
-		return err
-	}
-	return nil
+	return d.db.Create(driver).Error
 }
+
 func (d *DriverRepo) GetByID(id uint) (*domain.Drivers, error) {
-	var Rider domain.Drivers
-
-	if err := d.db.Where("id = ?", id).First(&Rider).Error; err != nil {
+	var driver domain.Drivers
+	if err := d.db.Where("id = ?", id).First(&driver).Error; err != nil {
 		return nil, err
 	}
-	return &Rider, nil
+	return &driver, nil
 }
+
 func (d *DriverRepo) GetByUserID(userID uint) (*domain.Drivers, error) {
-	var Rider domain.Drivers
-
-	if err := d.db.Where("user_id = ?", userID).First(&Rider).Error; err != nil {
+	var driver domain.Drivers
+	if err := d.db.Where("user_id = ?", userID).First(&driver).Error; err != nil {
 		return nil, err
 	}
-	return &Rider, nil
+	return &driver, nil
 }
+
 func (d *DriverRepo) Update(driver *domain.Drivers) error {
-	if err := d.db.Save(&driver).Error; err != nil {
-		return err
-	}
-	return nil
+	return d.db.Save(driver).Error
 }
+
 func (d *DriverRepo) Delete(id uint) error {
-	if err := d.db.Where("id = ?", id).Delete(&domain.Drivers{}).Error; err != nil {
-		return err
-	}
-	return nil
+	return d.db.Where("id = ?", id).Delete(&domain.Drivers{}).Error
 }
+
 func (d *DriverRepo) SetOnline(driverID uint, online bool) error {
-	var Driver domain.Drivers
-	if err := d.db.Where("id = ?", driverID).Find(&Driver).Error; err != nil {
-		return err
-	}
-	Driver.IsOnline = online
-
-	if err := d.db.Save(Driver).Error; err != nil {
-		return err
-	}
-	return nil
-
+	return d.db.Model(&domain.Drivers{}).Where("id = ?", driverID).Update("is_online", online).Error
 }
+
 func (d *DriverRepo) UpdateLocation(driverID uint, lat, lng float64) error {
-	var driver domain.DriverLocation
-	if err := d.db.Where("driver_id = ?", driverID).First(&driver).Error; err != nil {
-		return err
+	loc := domain.DriverLocation{
+		DriverID:  driverID,
+		Lat:       lat,
+		Lng:       lng,
+		UpdatedAt: time.Now(),
 	}
-	driver.Lat = lat
-	driver.Lng = lng
-	driver.UpdatedAt = time.Now()
 
-	if err := d.db.Save(&driver).Error; err != nil {
-		return err
-	}
-	return nil
+	// Upsert location record for driver
+	return d.db.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "driver_id"}},
+		DoUpdates: clause.AssignmentColumns([]string{"lat", "lng", "updated_at"}),
+	}).Create(&loc).Error
 }
+
 func (d *DriverRepo) GetAvailableDrivers() ([]domain.Drivers, error) {
 	var drivers []domain.Drivers
-
-	err := d.db.Where("is_online = ?", true).Find(&drivers).Error
+	// Available = online AND approved
+	err := d.db.Where("is_online = ? AND is_approved = ?", true, true).Find(&drivers).Error
 	if err != nil {
 		return nil, err
 	}
 	return drivers, nil
 }
+
+type driverWithDistance struct {
+	driver   domain.Drivers
+	distance float64
+}
+
 func (d *DriverRepo) GetNearbyDrivers(lat, lng float64, radiusKm float64) ([]domain.Drivers, error) {
-	drivers, err := d.GetAvailableDrivers()
+	availableDrivers, err := d.GetAvailableDrivers()
 	if err != nil {
 		return nil, err
 	}
-	var DriverLoc []domain.DriverLocation
 
-	for _, driver := range drivers {
-		var location domain.DriverLocation
-		if err := d.db.Where("id = ?", driver.ID).First(&location).Error; err != nil {
-			return nil, err
-		}
-		DriverLoc = append(DriverLoc, location)
+	if len(availableDrivers) == 0 {
+		return []domain.Drivers{}, nil
 	}
 
-	var nearBy []domain.DriverLocation
-	for _, driver := range DriverLoc {
-		distance := utils.Haversine(lat, lng, driver.Lat, driver.Lng)
-		if distance <= radiusKm {
-			nearBy = append(nearBy, driver)
+	var driverIDs []uint
+	driverMap := make(map[uint]domain.Drivers)
+	for _, drv := range availableDrivers {
+		driverIDs = append(driverIDs, drv.ID)
+		driverMap[drv.ID] = drv
+	}
+
+	var locations []domain.DriverLocation
+	if err := d.db.Where("driver_id IN ?", driverIDs).Find(&locations).Error; err != nil {
+		return nil, err
+	}
+
+	var list []driverWithDistance
+	for _, loc := range locations {
+		dist := utils.Haversine(lat, lng, loc.Lat, loc.Lng)
+		if dist <= radiusKm {
+			if drv, ok := driverMap[loc.DriverID]; ok {
+				list = append(list, driverWithDistance{
+					driver:   drv,
+					distance: dist,
+				})
+			}
 		}
 	}
-	var nearByDriver []domain.Drivers
-	for _, driver := range nearBy {
-		err := d.db.Where("id = ?", driver.DriverID).Find(&nearByDriver).Error
-		if err != nil {
-			return nil, err
-		}
+
+	// Sort nearest first
+	sort.Slice(list, func(i, j int) bool {
+		return list[i].distance < list[j].distance
+	})
+
+	result := make([]domain.Drivers, len(list))
+	for i, item := range list {
+		result[i] = item.driver
 	}
-	return nearByDriver, nil
+
+	return result, nil
 }

@@ -3,11 +3,11 @@ package interfaces
 import "github.com/izzy-Ti/ZemlyGo/internals/domain"
 
 type RideRepository interface {
-	Creat(ride *domain.Ride) error
-	GetById(id uint) (*domain.Ride, error)
+	Create(ride *domain.Ride) error
+	GetByID(id uint) (*domain.Ride, error)
 	Update(ride *domain.Ride) error
-	UpdateStatus(rideId uint, status string) error
-	AssignDriver(rideId uint, DriverId uint) error
+	UpdateStatus(rideID uint, status string) error
+	AssignDriver(rideID uint, driverID uint) error
 	GetActiveRideByDriver(driverID uint) (*domain.Ride, error)
 	GetActiveRideByRider(riderID uint) (*domain.Ride, error)
 	GetRidesByRider(riderID uint, limit, offset int) ([]domain.Ride, error)

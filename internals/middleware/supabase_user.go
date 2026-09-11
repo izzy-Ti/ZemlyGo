@@ -1,35 +1,17 @@
 package middleware
 
 import (
-	"net/http"
-	"strings"
-
 	"github.com/gin-gonic/gin"
+	"github.com/izzy-Ti/ZemlyGo/configs"
+	"github.com/izzy-Ti/ZemlyGo/internals/infrastructure/neon"
+	"github.com/izzy-Ti/ZemlyGo/internals/repository/interfaces"
 	"github.com/nedpals/supabase-go"
 )
 
-func AuthMiddleware(supabaseClient *supabase.Client) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		authHeader := c.GetHeader("Authorization")
-		if authHeader == "" {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Authorization header is required"})
-			return
-		}
-
-		token := strings.TrimPrefix(authHeader, "Bearer ")
-		if token == authHeader {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid token format"})
-			return
-		}
-		ctx := c.Request.Context()
-		user, err := supabaseClient.Auth.User(ctx, token)
-		if err != nil {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired token"})
-			return
-		}
-		c.Set("user_id", user.ID)
-		c.Set("user_email", user.Email)
-
-		c.Next()
-	}
+// AuthMiddleware provides backwards compatibility and delegates to NeonAuthMiddleware
+func AuthMiddleware(supabaseClient *supabase.Client, userRepo interfaces.UserRepository, jwtSecret string) gin.HandlerFunc {
+	neonClient := neon.NewClient(&configs.Config{
+		JWTSecret: jwtSecret,
+	})
+	return NeonAuthMiddleware(neonClient, userRepo)
 }
